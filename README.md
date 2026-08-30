@@ -8,7 +8,9 @@ Service Docker self-hosted pour surveiller ses dépôts GitHub et recevoir les �
 - Authentification locale intégrée.
 - Connexion à GitHub par token personnel chiffré.
 - Liste automatique des dépôts accessibles au compte.
-- Configuration des alertes directement depuis chaque dépôt.
+- Sélection globale des dépôts avec **Tout sélectionner / Tout désélectionner**.
+- Configuration globale des alertes et des destinations Discord appliquée à tous les dépôts surveillés.
+- Réglages individuels facultatifs pour créer des exceptions dépôt par dépôt.
 - Un ou plusieurs webhooks Discord.
 - Plusieurs destinations Discord possibles pour un même dépôt.
 - Alertes configurables :

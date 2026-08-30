@@ -1,6 +1,32 @@
 (() => {
-  const search=document.getElementById('repo-search'); const cards=[...document.querySelectorAll('.repo-card')]; let filter='all';
-  const apply=()=>{const q=(search?.value||'').trim().toLowerCase(); cards.forEach(c=>{const ok=c.dataset.name.includes(q)&&(filter==='all'||c.dataset.selected==='1'); c.style.display=ok?'':'none';});};
-  search?.addEventListener('input',apply); document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;apply();}));
-  cards.forEach(c=>{const m=c.querySelector('input[name="selected"]'); m?.addEventListener('change',()=>c.dataset.selected=m.checked?'1':'0');});
+  const search = document.getElementById("repo-search");
+  const rows = [...document.querySelectorAll(".repo-selection-row")];
+  const selectors = [...document.querySelectorAll(".repo-selector")];
+  const counter = document.getElementById("selection-counter");
+  const visibleRows = () => rows.filter(row => row.style.display !== "none");
+  const update = () => {
+    const count = selectors.filter(input => input.checked).length;
+    if (counter) counter.textContent = `${count} sélectionné${count > 1 ? "s" : ""}`;
+    rows.forEach(row => {
+      const input = row.querySelector(".repo-selector");
+      const badge = row.querySelector(".repo-state");
+      if (!input || !badge) return;
+      badge.textContent = input.checked ? "Surveillé" : "Inactif";
+      badge.classList.toggle("active", input.checked);
+    });
+  };
+  search?.addEventListener("input", () => {
+    const q = search.value.trim().toLowerCase();
+    rows.forEach(row => row.style.display = row.dataset.name.includes(q) ? "" : "none");
+  });
+  document.getElementById("select-all")?.addEventListener("click", () => {
+    visibleRows().forEach(row => { const input = row.querySelector(".repo-selector"); if (input) input.checked = true; });
+    update();
+  });
+  document.getElementById("select-none")?.addEventListener("click", () => {
+    visibleRows().forEach(row => { const input = row.querySelector(".repo-selector"); if (input) input.checked = false; });
+    update();
+  });
+  selectors.forEach(input => input.addEventListener("change", update));
+  update();
 })();

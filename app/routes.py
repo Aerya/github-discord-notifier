@@ -84,6 +84,60 @@ def sync_repositories():
     try: repos=list_repositories(decrypt_secret(enc))
     except Exception: flash('Impossible de récupérer les dépôts GitHub.','error'); return redirect(url_for('main.github'))
     _store_repositories(repos); flash(f'{len(repos)} dépôt(s) synchronisé(s).','success'); return redirect(url_for('main.repositories'))
+
+@bp.post('/depots/selection')
+@login_required
+def repositories_selection():
+    require_csrf()
+    db = get_db()
+    selected_ids = {int(x) for x in request.form.getlist('repository_id') if str(x).isdigit()}
+    for row in db.execute('SELECT id FROM repositories').fetchall():
+        db.execute('UPDATE repositories SET selected=? WHERE id=?', (int(row['id'] in selected_ids), row['id']))
+    db.commit()
+    flash(f'{len(selected_ids)} dépôt(s) sélectionné(s).', 'success')
+    return redirect(url_for('main.repositories'))
+
+
+@bp.post('/depots/appliquer-global')
+@login_required
+def repositories_apply_global():
+    require_csrf()
+    db = get_db()
+    repos = db.execute('SELECT id FROM repositories WHERE selected=1').fetchall()
+    if not repos:
+        flash('Sélectionnez au moins un dépôt à surveiller.', 'error')
+        return redirect(url_for('main.repositories'))
+
+    values = (
+        int('issues_enabled' in request.form),
+        int('prs_enabled' in request.form),
+        int('actions_enabled' in request.form),
+        int('forks_enabled' in request.form),
+        int('stars_enabled' in request.form),
+        int('ignore_own_prs' in request.form),
+        int('action_success' in request.form),
+        int('action_failure' in request.form),
+        int('action_cancelled' in request.form),
+    )
+    webhook_ids = [int(x) for x in request.form.getlist('webhook_id') if str(x).isdigit()]
+
+    for repo in repos:
+        repo_id = repo['id']
+        db.execute('''
+            UPDATE repositories SET
+              issues_enabled=?, prs_enabled=?, actions_enabled=?, forks_enabled=?, stars_enabled=?,
+              ignore_own_prs=?, action_success=?, action_failure=?, action_cancelled=?
+            WHERE id=?
+        ''', values + (repo_id,))
+        db.execute('DELETE FROM repository_webhooks WHERE repository_id=?', (repo_id,))
+        for webhook_id in webhook_ids:
+            db.execute('INSERT OR IGNORE INTO repository_webhooks(repository_id,webhook_id) VALUES(?,?)', (repo_id, webhook_id))
+
+    db.commit()
+    flash(f'Configuration globale appliquée à {len(repos)} dépôt(s).', 'success')
+    return redirect(url_for('main.repositories'))
+
+
 @bp.post('/depots/<int:repo_id>/enregistrer')
 @login_required
 def repository_save(repo_id):
