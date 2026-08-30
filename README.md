@@ -1,6 +1,6 @@
 # GitHub Discord Notifier
 
-Service Docker self-hosted pour recevoir sur Discord les événements utiles de ses dépôts GitHub, sans GitHub App, sans webhook entrant et sans reverse proxy obligatoire.
+Service Docker self-hosted pour surveiller ses dépôts GitHub et recevoir les événements utiles directement sur Discord.
 
 ## Fonctionnalités
 
@@ -18,14 +18,12 @@ Service Docker self-hosted pour recevoir sur Discord les événements utiles de 
   - nouveaux **forks** ;
   - nouvelles **stars**.
 - Option pour ignorer ses propres Pull Requests.
-- Polling sortant vers GitHub : aucune URL publique n'est nécessaire.
+- Surveillance périodique des dépôts GitHub avec intervalle configurable.
 - Intervalle réglable de 1 minute à 1 heure, 5 minutes recommandé.
 - Journaux des alertes envoyées, ignorées et en erreur.
 - La première vérification sert de référence : les anciens événements ne sont pas envoyés à Discord.
 
 ## Connexion GitHub
-
-Aucune GitHub App n'est nécessaire.
 
 La WebUI demande un token GitHub personnel, vérifie le compte associé puis récupère les dépôts accessibles. Le token est chiffré dans SQLite et n'est plus affiché.
 
@@ -85,8 +83,7 @@ Un succès utilise ✅ et une exécution annulée ⏹️.
 - CSP et anti-framing ;
 - validation stricte des URLs Discord ;
 - aucun secret écrit en clair dans les journaux ;
-- aucune API d'administration ;
-- aucune connexion entrante GitHub.
+- aucune API d'administration exposée.
 
 ## Image Docker
 
