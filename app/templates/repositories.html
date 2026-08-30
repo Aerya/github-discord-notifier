@@ -50,11 +50,11 @@
     <div>
       <span class="section-label">Notifications</span>
       <div class="global-event-grid">
-        <label class="global-event"><input type="checkbox" name="issues_enabled" checked><span>🐛</span><div><strong>Issues</strong><small>Nouvelles issues</small></div></label>
-        <label class="global-event"><input type="checkbox" name="prs_enabled" checked><span>🔀</span><div><strong>Pull Requests</strong><small>Nouvelles PR</small></div></label>
-        <label class="global-event"><input type="checkbox" name="actions_enabled"><span>⚙️</span><div><strong>Actions</strong><small>Workflows terminés</small></div></label>
-        <label class="global-event"><input type="checkbox" name="forks_enabled"><span>🍴</span><div><strong>Forks</strong><small>Nouveaux forks</small></div></label>
-        <label class="global-event"><input type="checkbox" name="stars_enabled"><span>⭐</span><div><strong>Stars</strong><small>Nouvelles étoiles</small></div></label>
+        <label class="global-event"><input type="checkbox" name="issues_enabled" checked><img class="octicon" src="{{ url_for('static', filename='octicons/issue-opened.svg') }}" alt=""><div><strong>Issues</strong><small>Nouvelles issues</small></div></label>
+        <label class="global-event"><input type="checkbox" name="prs_enabled" checked><img class="octicon" src="{{ url_for('static', filename='octicons/git-pull-request.svg') }}" alt=""><div><strong>Pull Requests</strong><small>Nouvelles PR</small></div></label>
+        <label class="global-event"><input type="checkbox" name="actions_enabled"><img class="octicon" src="{{ url_for('static', filename='octicons/workflow.svg') }}" alt=""><div><strong>Actions</strong><small>Workflows terminés</small></div></label>
+        <label class="global-event"><input type="checkbox" name="forks_enabled"><img class="octicon" src="{{ url_for('static', filename='octicons/repo-forked.svg') }}" alt=""><div><strong>Forks</strong><small>Nouveaux forks</small></div></label>
+        <label class="global-event"><input type="checkbox" name="stars_enabled"><img class="octicon" src="{{ url_for('static', filename='octicons/star.svg') }}" alt=""><div><strong>Stars</strong><small>Nouvelles étoiles</small></div></label>
       </div>
     </div>
     <div class="global-options">
@@ -64,9 +64,9 @@
     <div class="global-options">
       <span class="section-label">GitHub Actions</span>
       <div class="action-result-grid">
-        <label><input type="checkbox" name="action_failure" checked> ❌ Échec</label>
-        <label><input type="checkbox" name="action_success"> ✅ Succès</label>
-        <label><input type="checkbox" name="action_cancelled"> ⏹️ Annulé</label>
+        <label><input type="checkbox" name="action_failure" checked> Échec</label>
+        <label><input type="checkbox" name="action_success"> Succès</label>
+        <label><input type="checkbox" name="action_cancelled"> Annulé</label>
       </div>
     </div>
     <div class="global-options">

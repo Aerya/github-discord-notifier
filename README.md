@@ -37,44 +37,71 @@ Les alertes sont envoyées sous forme d'embeds avec un lien direct vers GitHub.
 
 ### Issue
 
-> 🐛 **Nouvelle issue #271**  
-> Start Guard fails with SSHFS mounts  
-> **Dépôt :** Aerya/Dockge-Enhanced  
-> **Auteur :** utilisateur  
+> <img src="app/static/octicons/issue-opened.svg" width="18" alt="Issue"> **Nouvelle issue #271**
+>
+> Start Guard fails with SSHFS mounts
+>
+> **Dépôt :** [Aerya/Dockge-Enhanced](https://github.com/Aerya/Dockge-Enhanced)
+>
+> **Auteur :** utilisateur
+>
 > **Labels :** bug, mounts
+>
+> Le titre de la notification Discord ouvre directement l'issue.
 
 ### Pull Request
 
-> 🔀 **Nouvelle Pull Request #272**  
-> Fix mount validation  
-> **Dépôt :** Aerya/Dockge-Enhanced  
-> **Auteur :** contributeur  
+> <img src="app/static/octicons/git-pull-request.svg" width="18" alt="Pull Request"> **Pull Request #272**
+>
+> Fix mount validation
+>
+> **Dépôt :** [Aerya/Dockge-Enhanced](https://github.com/Aerya/Dockge-Enhanced)
+>
+> **Auteur :** contributeur
+>
 > **Branches :** fix/mount → main
+>
+> Le titre de la notification Discord ouvre directement la Pull Request.
 
 ### GitHub Actions
 
-> ❌ **Action failure — Build Docker**  
-> Workflow terminé : **failure**  
-> **Dépôt :** Aerya/Dockge-Enhanced  
-> **Auteur :** Aerya  
-> **Branche :** main  
+> <img src="app/static/octicons/workflow.svg" width="18" alt="GitHub Actions"> **Build Docker — Échec**
+>
+> Workflow terminé : **Échec**
+>
+> **Dépôt :** [Aerya/Dockge-Enhanced](https://github.com/Aerya/Dockge-Enhanced)
+>
+> **Auteur :** Aerya
+>
+> **Branche :** main
+>
 > **Événement :** push
-
-Un succès utilise ✅ et une exécution annulée ⏹️.
+>
+> Le titre de la notification Discord ouvre directement l'exécution du workflow.
 
 ### Fork
 
-> 🍴 **Nouveau fork**  
-> Le dépôt a été forké vers **utilisateur/Dockge-Enhanced**.  
-> **Dépôt :** Aerya/Dockge-Enhanced  
+> <img src="app/static/octicons/repo-forked.svg" width="18" alt="Fork"> **Nouveau fork**
+>
+> Le dépôt a été forké vers **utilisateur/Dockge-Enhanced**.
+>
+> **Dépôt :** [Aerya/Dockge-Enhanced](https://github.com/Aerya/Dockge-Enhanced)
+>
 > **Auteur :** utilisateur
+>
+> Le titre de la notification Discord ouvre directement le dépôt forké.
 
 ### Star
 
-> ⭐ **Nouvelle étoile**  
-> **utilisateur** vient d'ajouter une étoile au dépôt.  
-> **Dépôt :** Aerya/Dockge-Enhanced  
+> <img src="app/static/octicons/star.svg" width="18" alt="Star"> **Nouvelle étoile**
+>
+> **utilisateur** vient d'ajouter une étoile au dépôt.
+>
+> **Dépôt :** [Aerya/Dockge-Enhanced](https://github.com/Aerya/Dockge-Enhanced)
+>
 > **Auteur :** utilisateur
+>
+> Le titre ouvre la page des stargazers du dépôt.
 
 ## Sécurité
 
