@@ -115,16 +115,21 @@ def recent_issues(token, full_name):
 
 
 def recent_pulls(token, full_name):
-    data, _ = get_json(
-        token,
-        f"{API}/repos/{full_name}/pulls",
-        params={
-            "state": "all",
-            "sort": "created",
-            "direction": "desc",
-            "per_page": 20,
-        },
-    )
+    try:
+        data, _ = get_json(
+            token,
+            f"{API}/repos/{full_name}/pulls",
+            params={
+                "state": "all",
+                "sort": "created",
+                "direction": "desc",
+                "per_page": 20,
+            },
+        )
+    except GitHubError as exc:
+        if exc.status == 404:
+            return []
+        raise
     return data
 
 
@@ -152,11 +157,16 @@ def recent_stars(token, full_name):
 
 
 def recent_workflow_runs(token, full_name):
-    data, _ = get_json(
-        token,
-        f"{API}/repos/{full_name}/actions/runs",
-        params={"per_page": 20},
-    )
+    try:
+        data, _ = get_json(
+            token,
+            f"{API}/repos/{full_name}/actions/runs",
+            params={"per_page": 20},
+        )
+    except GitHubError as exc:
+        if exc.status == 404:
+            return []
+        raise
     return data.get("workflow_runs", [])
 
 
