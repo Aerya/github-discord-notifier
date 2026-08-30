@@ -1,13 +1,75 @@
-{% extends "base.html" %}{% block content %}<div class="page-head"><div><span class="eyebrow">Compte</span><h1>GitHub</h1><p>Connectez votre compte GitHub pour synchroniser vos dépôts et configurer vos alertes.</p></div>{% if connected %}<span class="status ok">● Connecté</span>{% else %}<span class="status warn">● Non connecté</span>{% endif %}</div><div class="grid"><section class="panel"><div class="panel-head"><div><h2>{{ "Compte connecté" if connected else "Connecter GitHub" }}</h2><p>Le token est chiffré dans SQLite et n’est jamais réaffiché.</p></div></div>{% if connected %}<div class="identity"><span>@</span><div><strong>{{ github_login }}</strong><small>Compte utilisé pour la surveillance</small></div></div><div class="info">{% if rate %}<div><span>Quota API</span><strong>{{ rate.remaining }} / {{ rate.limit }}</strong></div>{% endif %}<div><span>Mode</span><strong>Polling sortant</strong></div></div><form method="post" action="{{ url_for('main.github_disconnect') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="danger-outline">Déconnecter GitHub</button></form>{% else %}<form method="post" class="stack"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><label>
-  Token GitHub
-  <input type="password" name="token" placeholder="github_pat_…" required>
-  <small>
-    Utilisez de préférence un
-    <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Fine-grained Personal Access Token</a>.
-    Sélectionnez les dépôts à surveiller puis accordez uniquement :
-    <strong>Metadata: Read</strong>,
-    <strong>Issues: Read</strong>,
-    <strong>Pull requests: Read</strong> et
-    <strong>Actions: Read</strong>.
-  </small>
-</label><button class="primary">Connecter GitHub</button></form>{% endif %}</section><section class="panel"><div class="panel-head"><div><h2>Fréquence</h2><p>Intervalle entre deux vérifications automatiques.</p></div></div><form method="post" action="{{ url_for('main.github_interval') }}" class="stack"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><label>Intervalle<select name="poll_interval">{% for seconds,label in [(60,"1 minute"),(120,"2 minutes"),(300,"5 minutes — recommandé"),(600,"10 minutes"),(900,"15 minutes"),(1800,"30 minutes"),(3600,"1 heure")] %}<option value="{{ seconds }}" {{ "selected" if poll_interval|int==seconds }}>{{ label }}</option>{% endfor %}</select></label><button class="secondary">Enregistrer</button></form></section></div>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <span class="eyebrow">GitHub</span>
+    <h1>Connexion & Webhooks</h1>
+    <p>Le PAT sert uniquement à lister les dépôts et à administrer leurs webhooks. La surveillance est ensuite entièrement temps réel.</p>
+  </div>
+  {% if connected %}<span class="status ok">Connecté · @{{ github_login }}</span>{% else %}<span class="status warn">PAT non configuré</span>{% endif %}
+</div>
+
+<div class="grid">
+  <section class="panel">
+    <div class="panel-head"><div><h2>Fine-grained PAT</h2><p>Chiffré dans SQLite et jamais réaffiché.</p></div></div>
+    {% if connected %}
+      <div class="identity"><span>@</span><div><strong>{{ github_login }}</strong><small>Compte utilisé pour administrer les hooks</small></div></div>
+      <div class="info">
+        {% if rate %}<div><span>Quota API</span><strong>{{ rate.remaining }} / {{ rate.limit }}</strong></div>{% endif %}
+        <div><span>Surveillance</span><strong>0 polling · Webhooks</strong></div>
+      </div>
+      <form method="post" action="{{ url_for('main.github_disconnect') }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button class="danger-outline">Supprimer le PAT</button>
+      </form>
+    {% else %}
+      <form method="post" class="stack">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <label>
+          Token GitHub
+          <input type="password" name="token" placeholder="github_pat_…" required>
+          <small>
+            <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Créer un Fine-grained PAT</a>.
+            Sélectionnez les dépôts à surveiller et accordez <strong>Webhooks: Read and write</strong>.
+          </small>
+        </label>
+        <button class="primary">Connecter GitHub</button>
+      </form>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><div><h2>URL publique</h2><p>Votre sous-domaine HTTPS déjà géré par votre reverse proxy.</p></div></div>
+    <form method="post" action="{{ url_for('main.github_webhook_config') }}" class="stack">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <label>
+        URL publique
+        <input type="url" name="public_url" value="{{ public_url }}" placeholder="https://github-notifier.exemple.fr" required>
+        <small>L’application ajoutera automatiquement <strong>/webhook/github</strong>. Aucun reverse proxy n’est intégré au conteneur.</small>
+      </label>
+      {% if webhook_endpoint %}
+      <div class="info"><div><span>Endpoint GitHub</span><strong class="mono">{{ webhook_endpoint }}</strong></div></div>
+      {% endif %}
+      <button class="primary">Enregistrer et synchroniser les hooks</button>
+    </form>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <div><h2>État des hooks</h2><p>Les hooks sont créés ou mis à jour automatiquement selon les dépôts et événements sélectionnés.</p></div>
+    {% if connected and webhook_endpoint %}
+    <form method="post" action="{{ url_for('main.github_webhooks_sync') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <button class="secondary">Resynchroniser</button>
+    </form>
+    {% endif %}
+  </div>
+  <div class="info">
+    <div><span>Dépôts sélectionnés</span><strong>{{ hook_counts.selected }}</strong></div>
+    <div><span>Hooks actifs</span><strong>{{ hook_counts.active }}</strong></div>
+    <div><span>Hooks en erreur</span><strong>{{ hook_counts.errors }}</strong></div>
+  </div>
+  <p class="helper">Le reverse proxy doit simplement transmettre HTTPS vers le port 8080 de l’application. Activez <code>APP_TRUST_PROXY=true</code> si vous lui faites confiance.</p>
+</section>
+{% endblock %}

@@ -1,8 +1,10 @@
 import os
 import sqlite3
+
 from flask import current_app, g
 
-SCHEMA = '''
+
+SCHEMA = """
 PRAGMA journal_mode=WAL;
 PRAGMA foreign_keys=ON;
 
@@ -12,10 +14,12 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+
 CREATE TABLE IF NOT EXISTS repositories (
     id INTEGER PRIMARY KEY,
     full_name TEXT NOT NULL UNIQUE,
@@ -32,14 +36,21 @@ CREATE TABLE IF NOT EXISTS repositories (
     action_success INTEGER NOT NULL DEFAULT 0,
     action_failure INTEGER NOT NULL DEFAULT 1,
     action_cancelled INTEGER NOT NULL DEFAULT 0,
-    last_sync_at TEXT
+    last_sync_at TEXT,
+    github_hook_id INTEGER,
+    github_hook_status TEXT,
+    github_hook_error TEXT,
+    github_hook_updated_at TEXT,
+    last_hook_delivery_at TEXT
 );
+
 CREATE TABLE IF NOT EXISTS discord_webhooks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     url_encrypted TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE IF NOT EXISTS repository_webhooks (
     repository_id INTEGER NOT NULL,
     webhook_id INTEGER NOT NULL,
@@ -47,10 +58,12 @@ CREATE TABLE IF NOT EXISTS repository_webhooks (
     FOREIGN KEY(repository_id) REFERENCES repositories(id) ON DELETE CASCADE,
     FOREIGN KEY(webhook_id) REFERENCES discord_webhooks(id) ON DELETE CASCADE
 );
+
 CREATE TABLE IF NOT EXISTS seen_events (
     event_key TEXT PRIMARY KEY,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE IF NOT EXISTS event_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -61,32 +74,66 @@ CREATE TABLE IF NOT EXISTS event_logs (
     actor TEXT,
     reason TEXT
 );
-'''
+"""
+
+
+MIGRATIONS = {
+    "github_hook_id": "INTEGER",
+    "github_hook_status": "TEXT",
+    "github_hook_error": "TEXT",
+    "github_hook_updated_at": "TEXT",
+    "last_hook_delivery_at": "TEXT",
+}
+
 
 def get_db():
-    if 'db' not in g:
-        g.db = sqlite3.connect(current_app.config['DATABASE'], timeout=30)
+    if "db" not in g:
+        g.db = sqlite3.connect(current_app.config["DATABASE"], timeout=30)
         g.db.row_factory = sqlite3.Row
-        g.db.execute('PRAGMA foreign_keys=ON')
+        g.db.execute("PRAGMA foreign_keys=ON")
     return g.db
 
+
 def close_db(_=None):
-    db = g.pop('db', None)
+    db = g.pop("db", None)
     if db is not None:
         db.close()
 
+
 def init_db(app):
-    path = app.config['DATABASE']
-    os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
+    path = app.config["DATABASE"]
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with sqlite3.connect(path, timeout=30) as con:
         con.executescript(SCHEMA)
+        columns = {
+            row[1]
+            for row in con.execute("PRAGMA table_info(repositories)").fetchall()
+        }
+        for name, definition in MIGRATIONS.items():
+            if name not in columns:
+                con.execute(
+                    f"ALTER TABLE repositories ADD COLUMN {name} {definition}"
+                )
+        con.commit()
     app.teardown_appcontext(close_db)
 
+
 def setting_get(key, default=None):
-    row = get_db().execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
-    return row['value'] if row else default
+    row = get_db().execute(
+        "SELECT value FROM settings WHERE key=?",
+        (key,),
+    ).fetchone()
+    return row["value"] if row else default
+
 
 def setting_set(key, value):
     db = get_db()
-    db.execute('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', (key, str(value)))
+    db.execute(
+        """
+        INSERT INTO settings(key,value)
+        VALUES(?,?)
+        ON CONFLICT(key) DO UPDATE SET value=excluded.value
+        """,
+        (key, str(value)),
+    )
     db.commit()

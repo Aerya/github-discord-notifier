@@ -4,7 +4,7 @@
   <div>
     <span class="eyebrow">Alertes</span>
     <h1>Dépôts</h1>
-    <p>Sélectionnez vos dépôts puis appliquez leurs alertes et destinations Discord en une seule opération.</p>
+    <p>Sélectionnez les dépôts puis appliquez leurs alertes et destinations Discord en une seule opération.</p>
   </div>
   <form method="post" action="{{ url_for('main.sync_repositories') }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
@@ -12,28 +12,34 @@
   </form>
 </div>
 
+{% if not webhook_ready %}
 <section class="panel">
   <div class="panel-head">
-    <div><h2>1. Dépôts surveillés</h2><p>Choisissez les dépôts concernés par les notifications.</p></div>
+    <div><h2>URL publique manquante</h2><p>Configurez votre sous-domaine reverse-proxy dans GitHub. Aucun polling de secours ne sera utilisé.</p></div>
+    <a class="button primary" href="{{ url_for('main.github') }}">Configurer</a>
+  </div>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-head">
+    <div><h2>1. Dépôts surveillés</h2><p>La sélection installe ou supprime automatiquement les hooks GitHub.</p></div>
     <span class="selection-counter" id="selection-counter">0 sélectionné</span>
   </div>
   <form method="post" action="{{ url_for('main.repositories_selection') }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
     <div class="toolbar">
       <div class="search"><span>⌕</span><input id="repo-search" type="search" placeholder="Rechercher un dépôt…" autocomplete="off"></div>
-      <div class="filters">
-        <button type="button" class="ghost" id="select-all">Tout sélectionner</button>
-        <button type="button" class="ghost" id="select-none">Tout désélectionner</button>
-      </div>
+      <div class="filters"><button type="button" class="ghost" id="select-all">Tout sélectionner</button><button type="button" class="ghost" id="select-none">Tout désélectionner</button></div>
     </div>
     <div class="repo-selection-list" id="repo-list">
       {% for repo in repositories %}
       <label class="repo-selection-row" data-name="{{ repo.full_name|lower }}">
         <div class="repo-check">
           <input class="repo-selector" type="checkbox" name="repository_id" value="{{ repo.id }}" {% if repo.selected %}checked{% endif %}>
-          <div><strong>{{ repo.full_name }}</strong><small>{{ "Privé" if repo.private else "Public" }}</small></div>
+          <div><strong>{{ repo.full_name }}</strong><small>{{ "Privé" if repo.private else "Public" }} · Hook : {{ "actif" if repo.github_hook_status=="active" else ("erreur" if repo.github_hook_status=="error" else "non installé") }}</small></div>
         </div>
-        <span class="repo-state {% if repo.selected %}active{% endif %}">{{ "Surveillé" if repo.selected else "Inactif" }}</span>
+        <span class="repo-state {% if repo.github_hook_status == 'active' %}active{% endif %}">{{ "Temps réel" if repo.github_hook_status=="active" else ("Erreur hook" if repo.github_hook_status=="error" else ("À synchroniser" if repo.selected else "Inactif")) }}</span>
       </label>
       {% else %}
       <div class="empty"><b>Aucun dépôt</b><span>Connectez GitHub puis synchronisez vos dépôts.</span></div>
@@ -57,10 +63,12 @@
         <label class="global-event"><input type="checkbox" name="stars_enabled"><img class="octicon" src="{{ url_for('static', filename='octicons/star.svg') }}" alt=""><div><strong>Stars</strong><small>Nouvelles étoiles</small></div></label>
       </div>
     </div>
+
     <div class="global-options">
       <span class="section-label">Pull Requests</span>
       <label class="option-line"><input type="checkbox" name="ignore_own_prs" checked><div><strong>Ignorer mes propres PR</strong><small>Ne pas envoyer d’alerte lorsqu’une Pull Request vient de votre compte GitHub.</small></div></label>
     </div>
+
     <div class="global-options">
       <span class="section-label">GitHub Actions</span>
       <div class="action-result-grid">
@@ -69,55 +77,24 @@
         <label><input type="checkbox" name="action_cancelled"> Annulé</label>
       </div>
     </div>
+
     <div class="global-options">
       <span class="section-label">Destination Discord</span>
       {% if webhooks %}
       <div class="webhook-choice-grid">
         {% for w in webhooks %}
-        <label class="webhook-choice"><input type="checkbox" name="webhook_id" value="{{ w.id }}"><span>◉</span><strong>{{ w.name }}</strong></label>
+        <label class="webhook-choice"><input type="checkbox" name="webhook_id" value="{{ w.id }}"><strong>{{ w.name }}</strong></label>
         {% endfor %}
       </div>
-      <p class="helper">Plusieurs destinations peuvent être sélectionnées.</p>
       {% else %}
       <div class="empty compact"><b>Aucun webhook Discord</b><a href="{{ url_for('main.discord') }}">Ajouter une destination</a></div>
       {% endif %}
     </div>
+
     <div class="apply-box">
-      <div><strong>Appliquer à tous les dépôts surveillés</strong><small>Les réglages précédents de ces dépôts seront remplacés.</small></div>
+      <div><strong>Appliquer à tous les dépôts surveillés</strong><small>Les hooks GitHub seront resynchronisés automatiquement.</small></div>
       <button class="primary" type="submit">Appliquer la configuration</button>
     </div>
   </form>
 </section>
-
-<details class="panel advanced-panel">
-  <summary><div><strong>Réglages individuels</strong><small>Facultatif · pour créer une exception sur un dépôt précis</small></div><span>Afficher</span></summary>
-  <div class="advanced-content">
-    {% for repo in repositories if repo.selected %}
-    <form class="repo-override" method="post" action="{{ url_for('main.repository_save', repo_id=repo.id) }}">
-      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-      <input type="hidden" name="selected" value="on">
-      <div class="repo-override-head"><div><strong>{{ repo.full_name }}</strong><small>Configuration spécifique</small></div><button class="secondary small-btn" type="submit">Enregistrer</button></div>
-      <div class="override-events">
-        <label><input type="checkbox" name="issues_enabled" {% if repo.issues_enabled %}checked{% endif %}> Issues</label>
-        <label><input type="checkbox" name="prs_enabled" {% if repo.prs_enabled %}checked{% endif %}> PR</label>
-        <label><input type="checkbox" name="actions_enabled" {% if repo.actions_enabled %}checked{% endif %}> Actions</label>
-        <label><input type="checkbox" name="forks_enabled" {% if repo.forks_enabled %}checked{% endif %}> Forks</label>
-        <label><input type="checkbox" name="stars_enabled" {% if repo.stars_enabled %}checked{% endif %}> Stars</label>
-        <label><input type="checkbox" name="ignore_own_prs" {% if repo.ignore_own_prs %}checked{% endif %}> Ignorer mes PR</label>
-      </div>
-      <div class="override-webhooks">
-        {% for w in webhooks %}
-        <label><input type="checkbox" name="webhook_id" value="{{ w.id }}" {% if w.id in link_map.get(repo.id, []) %}checked{% endif %}> {{ w.name }}</label>
-        {% endfor %}
-      </div>
-      {% if repo.action_success %}<input type="hidden" name="action_success" value="on">{% endif %}
-      {% if repo.action_failure %}<input type="hidden" name="action_failure" value="on">{% endif %}
-      {% if repo.action_cancelled %}<input type="hidden" name="action_cancelled" value="on">{% endif %}
-    </form>
-    {% else %}
-    <div class="empty compact"><span>Aucun dépôt surveillé.</span></div>
-    {% endfor %}
-  </div>
-</details>
-<script src="{{ url_for('static', filename='repos.js') }}"></script>
 {% endblock %}

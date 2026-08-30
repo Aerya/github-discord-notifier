@@ -1,134 +1,260 @@
 # GitHub Discord Notifier
 
-Service Docker self-hosted pour surveiller ses dépôts GitHub et recevoir les événements utiles directement sur Discord.
+Service Docker self-hosted qui reçoit les événements GitHub en temps réel et les envoie vers Discord.
+
+## Fonctionnement
+
+GitHub Discord Notifier fonctionne désormais en **webhooks entrants** :
+
+```text
+GitHub
+  │
+  │ webhook HTTPS
+  ▼
+Reverse proxy existant
+  │
+  ▼
+GitHub Discord Notifier :8080
+  │
+  └── /webhook/github
+          │
+          ▼
+       Discord
+```
+
+Il n'y a **aucun polling périodique** des dépôts.
+GitHub pousse directement chaque événement vers l'application dès qu'il se produit.
+
+Le reverse proxy **n'est pas intégré** au projet. L'application est simplement compatible avec Nginx Proxy Manager, Traefik, Caddy, Cloudflare Tunnel ou tout autre reverse proxy HTTPS.
 
 ## Fonctionnalités
 
 - WebUI entièrement en français.
-- Authentification locale intégrée.
-- Connexion à GitHub par token personnel chiffré.
-- Liste automatique des dépôts accessibles au compte.
-- Sélection globale des dépôts avec **Tout sélectionner / Tout désélectionner**.
-- Configuration globale des alertes et des destinations Discord appliquée à tous les dépôts surveillés.
-- Réglages individuels facultatifs pour créer des exceptions dépôt par dépôt.
-- Un ou plusieurs webhooks Discord.
-- Plusieurs destinations Discord possibles pour un même dépôt.
-- Alertes configurables :
-  - nouvelles **Issues** ;
-  - nouvelles **Pull Requests** ;
-  - **GitHub Actions** terminées : échec, succès et/ou annulation ;
-  - nouveaux **forks** ;
-  - nouvelles **stars**.
-- Option pour ignorer ses propres Pull Requests.
-- Surveillance périodique des dépôts GitHub avec intervalle configurable.
-- Intervalle réglable de 1 minute à 1 heure, 5 minutes recommandé.
-- Journaux des alertes envoyées, ignorées et en erreur.
-- La première vérification sert de référence : les anciens événements ne sont pas envoyés à Discord.
+- Authentification locale.
+- Fine-grained PAT GitHub chiffré dans SQLite.
+- Synchronisation de la liste des dépôts accessibles.
+- Sélection globale des dépôts.
+- **Tout sélectionner / Tout désélectionner**.
+- Installation automatique des webhooks GitHub sur les dépôts sélectionnés.
+- Mise à jour automatique des hooks lorsque les alertes changent.
+- Suppression du hook lorsqu'un dépôt n'est plus surveillé.
+- Aucun polling GitHub.
+- Notifications Discord quasi instantanées.
+- Plusieurs webhooks Discord.
+- Alertes :
+  - nouvelles Issues ;
+  - nouvelles Pull Requests ;
+  - GitHub Actions terminées ;
+  - forks ;
+  - stars.
+- Filtres Actions : échec, succès, annulation.
+- Option pour ignorer ses propres PR.
+- Octicons GitHub officiels dans la WebUI et les notifications Discord.
+- Titres Discord cliquables vers l'Issue, la PR, le workflow ou le dépôt concerné.
+- Nom du dépôt cliquable vers GitHub.
+- Journaux des envois, erreurs et événements ignorés.
 
-## Connexion GitHub
+## Prérequis
 
-La WebUI demande un token GitHub personnel, vérifie le compte associé puis récupère les dépôts accessibles. Le token est chiffré dans SQLite et n'est plus affiché.
+- Docker / Docker Compose.
+- Un sous-domaine HTTPS pointant vers votre reverse proxy.
+- Le reverse proxy doit transférer le trafic vers le port `8080` du conteneur.
+- Un webhook Discord.
+- Un Fine-grained Personal Access Token GitHub.
 
-Créez de préférence un **[Fine-grained Personal Access Token](https://github.com/settings/personal-access-tokens/new)** :
+## Reverse proxy
 
-1. choisissez les dépôts à surveiller ;
-2. dans **Repository permissions**, accordez uniquement :
-   - **Metadata: Read** ;
-   - **Issues: Read** ;
-   - **Pull requests: Read** ;
-   - **Actions: Read** ;
-3. générez le token puis collez-le dans la page **GitHub** de la WebUI.
+Le projet ne fournit et n'installe **aucun reverse proxy**.
 
-L'application n'effectue aucune écriture sur GitHub.
+Configurez simplement votre proxy existant pour envoyer :
 
-## Alertes Discord
+```text
+https://github-notifier.exemple.fr
+        ↓
+http://IP_DOCKER:8080
+```
 
-Les alertes sont envoyées sous forme d'embeds avec un lien direct vers GitHub.
+GitHub appellera ensuite :
+
+```text
+https://github-notifier.exemple.fr/webhook/github
+```
+
+Avec un proxy HTTPS, utilisez :
+
+```yaml
+APP_COOKIE_SECURE: "true"
+APP_TRUST_PROXY: "true"
+```
+
+`APP_TRUST_PROXY=true` indique à Flask qu'il peut faire confiance aux en-têtes `X-Forwarded-*` ajoutés par votre reverse proxy.
+
+## Fine-grained PAT GitHub
+
+Créez un **[Fine-grained Personal Access Token](https://github.com/settings/personal-access-tokens/new)**.
+
+1. Sélectionnez les dépôts que vous souhaitez surveiller.
+2. Dans **Repository permissions**, accordez :
+   - **Webhooks: Read and write**.
+3. Générez le token.
+4. Collez-le dans **GitHub** dans la WebUI.
+
+Le PAT sert uniquement à :
+
+- récupérer la liste des dépôts ;
+- créer, modifier et supprimer les webhooks GitHub.
+
+Il n'est pas utilisé pour scanner périodiquement les dépôts.
+
+## Configuration GitHub
+
+Dans la page **GitHub** de la WebUI :
+
+1. connectez le Fine-grained PAT ;
+2. saisissez l'URL publique de votre sous-domaine, par exemple :
+
+```text
+https://github-notifier.exemple.fr
+```
+
+L'application construit automatiquement l'endpoint :
+
+```text
+https://github-notifier.exemple.fr/webhook/github
+```
+
+Elle génère également automatiquement un secret webhook et le stocke chiffré dans SQLite.
+
+Ensuite, lorsque vous sélectionnez des dépôts ou modifiez les types d'alertes, les webhooks GitHub sont resynchronisés automatiquement.
+
+## Sécurité des webhooks GitHub
+
+Chaque livraison GitHub est vérifiée grâce à la signature :
+
+```text
+X-Hub-Signature-256
+```
+
+L'application calcule la signature HMAC SHA-256 avec le secret enregistré et rejette toute livraison invalide.
+
+L'endpoint `/webhook/github` est public par nécessité, mais il n'accepte pas les requêtes non signées correctement.
+
+La WebUI reste protégée par l'authentification locale.
+
+## Événements GitHub utilisés
+
+Selon la configuration de chaque dépôt, l'application demande uniquement les événements nécessaires :
+
+- `issues`
+- `pull_request`
+- `workflow_run`
+- `fork`
+- `star`
+
+Pour `issues` et `pull_request`, seules les créations sont notifiées.
+
+Pour `workflow_run`, seules les exécutions terminées correspondant aux statuts sélectionnés sont notifiées.
+
+Pour `star`, seule l'action `created` est notifiée.
+
+## Notifications Discord
+
+Les notifications utilisent les Octicons GitHub officiels.
 
 ### Issue
 
-> <img src="app/static/octicons/issue-opened.svg" width="18" alt="Issue"> **Nouvelle issue #271**
->
-> Start Guard fails with SSHFS mounts
->
-> **Dépôt :** [Aerya/Dockge-Enhanced](https://github.com/Aerya/Dockge-Enhanced)
->
-> **Auteur :** utilisateur
->
-> **Labels :** bug, mounts
->
-> Le titre de la notification Discord ouvre directement l'issue.
+**Nouvelle issue #271**
+
+Titre de l'issue
+
+**Dépôt :** lien direct vers le dépôt
+**Auteur :** utilisateur
+**Labels :** bug, mounts
+
+Le titre ouvre directement l'issue GitHub.
 
 ### Pull Request
 
-> <img src="app/static/octicons/git-pull-request.svg" width="18" alt="Pull Request"> **Pull Request #272**
->
-> Fix mount validation
->
-> **Dépôt :** [Aerya/Dockge-Enhanced](https://github.com/Aerya/Dockge-Enhanced)
->
-> **Auteur :** contributeur
->
-> **Branches :** fix/mount → main
->
-> Le titre de la notification Discord ouvre directement la Pull Request.
+**Pull Request #272**
+
+Titre de la PR
+
+**Dépôt :** lien direct vers le dépôt
+**Auteur :** contributeur
+**Branches :** fix/mount → main
+
+Le titre ouvre directement la Pull Request.
 
 ### GitHub Actions
 
-> <img src="app/static/octicons/workflow.svg" width="18" alt="GitHub Actions"> **Build Docker — Échec**
->
-> Workflow terminé : **Échec**
->
-> **Dépôt :** [Aerya/Dockge-Enhanced](https://github.com/Aerya/Dockge-Enhanced)
->
-> **Auteur :** Aerya
->
-> **Branche :** main
->
-> **Événement :** push
->
-> Le titre de la notification Discord ouvre directement l'exécution du workflow.
+**Build Docker — Échec**
+
+**Dépôt :** lien direct vers le dépôt
+**Branche :** main
+**Événement :** push
+
+Le titre ouvre directement l'exécution GitHub Actions.
 
 ### Fork
 
-> <img src="app/static/octicons/repo-forked.svg" width="18" alt="Fork"> **Nouveau fork**
->
-> Le dépôt a été forké vers **utilisateur/Dockge-Enhanced**.
->
-> **Dépôt :** [Aerya/Dockge-Enhanced](https://github.com/Aerya/Dockge-Enhanced)
->
-> **Auteur :** utilisateur
->
-> Le titre de la notification Discord ouvre directement le dépôt forké.
+**Nouveau fork**
+
+Le titre ouvre directement le dépôt forké.
 
 ### Star
 
-> <img src="app/static/octicons/star.svg" width="18" alt="Star"> **Nouvelle étoile**
->
-> **utilisateur** vient d'ajouter une étoile au dépôt.
->
-> **Dépôt :** [Aerya/Dockge-Enhanced](https://github.com/Aerya/Dockge-Enhanced)
->
-> **Auteur :** utilisateur
->
-> Le titre ouvre la page des stargazers du dépôt.
+**Nouvelle étoile**
+
+Le titre ouvre la page des stargazers du dépôt.
+
+## Docker Compose
+
+```yaml
+services:
+  github-discord-notifier:
+    image: ghcr.io/aerya/github-discord-notifier:latest
+    container_name: github-discord-notifier
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      APP_SECRET_KEY: "CHANGE_ME_WITH_A_LONG_RANDOM_VALUE"
+      APP_ENCRYPTION_KEY: "CHANGE_ME_WITH_A_FERNET_KEY"
+      APP_COOKIE_SECURE: "true"
+      APP_TRUST_PROXY: "true"
+    volumes:
+      - ./data:/data
+```
+
+## Journaux
+
+Les journaux indiquent notamment :
+
+- hook GitHub installé ou en erreur ;
+- livraison webhook reçue ;
+- signature invalide ;
+- événement ignoré par configuration ;
+- notification Discord envoyée ;
+- erreur Discord détaillée.
 
 ## Sécurité
 
 - mots de passe locaux hashés avec Argon2id ;
-- token GitHub et webhooks Discord chiffrés dans SQLite ;
-- protection CSRF ;
+- PAT GitHub chiffré dans SQLite ;
+- secret webhook GitHub chiffré ;
+- webhooks Discord chiffrés ;
+- vérification HMAC SHA-256 des livraisons GitHub ;
+- protection CSRF de la WebUI ;
 - cookies `HttpOnly` et `SameSite=Lax` ;
+- `Secure` recommandé derrière HTTPS ;
 - CSP et anti-framing ;
-- validation stricte des URLs Discord ;
-- aucun secret écrit en clair dans les journaux ;
-- aucune API d'administration exposée.
+- aucun secret écrit dans les journaux.
 
 ## Image Docker
 
-Le workflow fourni teste le projet puis publie automatiquement l'image sur GHCR :
-
-`ghcr.io/aerya/github-discord-notifier:latest`
+```text
+ghcr.io/aerya/github-discord-notifier:latest
+```
 
 ## Licence
 

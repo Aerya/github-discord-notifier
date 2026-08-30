@@ -8,7 +8,7 @@ services:
     environment:
       APP_SECRET_KEY: "CHANGE_ME_WITH_A_LONG_RANDOM_VALUE"
       APP_ENCRYPTION_KEY: "CHANGE_ME_WITH_A_FERNET_KEY"
-      APP_COOKIE_SECURE: "false"
-      APP_TRUST_PROXY: "false"
+      APP_COOKIE_SECURE: "true"
+      APP_TRUST_PROXY: "true"
     volumes:
       - ./data:/data
