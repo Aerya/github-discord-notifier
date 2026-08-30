@@ -29,7 +29,17 @@ Service Docker self-hosted pour surveiller ses dépôts GitHub et recevoir les �
 
 La WebUI demande un token GitHub personnel, vérifie le compte associé puis récupère les dépôts accessibles. Le token est chiffré dans SQLite et n'est plus affiché.
 
-L'application n'effectue aucune écriture sur GitHub. Pour les dépôts privés et GitHub Actions, le token doit disposer des droits de lecture correspondants.
+Créez de préférence un **[Fine-grained Personal Access Token](https://github.com/settings/personal-access-tokens/new)** :
+
+1. choisissez les dépôts à surveiller ;
+2. dans **Repository permissions**, accordez uniquement :
+   - **Metadata: Read** ;
+   - **Issues: Read** ;
+   - **Pull requests: Read** ;
+   - **Actions: Read** ;
+3. générez le token puis collez-le dans la page **GitHub** de la WebUI.
+
+L'application n'effectue aucune écriture sur GitHub.
 
 ## Alertes Discord
 
