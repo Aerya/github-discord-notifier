@@ -52,6 +52,27 @@ L'application doit utiliser un reverse proxy HTTPS type Nginx Proxy Manager, Tra
 - Nom du dépôt cliquable vers GitHub
 - Journaux des envois, erreurs et événements ignorés
 
+## Captures d'écran
+
+<p align="center">
+  <img src="docs/screens/1.png" width="49%" alt="GitHub Discord Notifier - capture 1">
+  <img src="docs/screens/2.png" width="49%" alt="GitHub Discord Notifier - capture 2">
+</p>
+
+<p align="center">
+  <img src="docs/screens/3.png" width="49%" alt="GitHub Discord Notifier - capture 3">
+  <img src="docs/screens/4.png" width="49%" alt="GitHub Discord Notifier - capture 4">
+</p>
+
+<p align="center">
+  <img src="docs/screens/5.png" width="49%" alt="GitHub Discord Notifier - capture 5">
+  <img src="docs/screens/6.png" width="49%" alt="GitHub Discord Notifier - capture 6">
+</p>
+
+<p align="center">
+  <img src="docs/screens/7.png" width="70%" alt="GitHub Discord Notifier - capture 7">
+</p>
+
 ## Prérequis
 
 - Docker / Docker Compose.
