@@ -1,3 +1,8 @@
+from datetime import datetime, timezone
+
+def now():
+    return datetime.now(timezone.utc)
+
 import os
 from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -17,4 +22,5 @@ def create_app(test_config=None):
     @app.after_request
     def headers(r):
         r.headers['X-Content-Type-Options']='nosniff'; r.headers['X-Frame-Options']='DENY'; r.headers['Referrer-Policy']='same-origin'; r.headers['Permissions-Policy']='camera=(), microphone=(), geolocation=()'; r.headers['Content-Security-Policy']="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"; r.headers['Cache-Control']='no-store'; return r
-    start_poller(app); return app
+    start_poller(app); app.jinja_env.globals["now"] = now
+    return app
