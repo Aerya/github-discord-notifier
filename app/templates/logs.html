@@ -1,1 +1,59 @@
-{% extends "base.html" %}{% block content %}<div class="page-head"><div><span class="eyebrow">Historique</span><h1>Journaux</h1><p>500 derniers événements traités.</p></div><form method="post" action="{{ url_for('main.logs_clear') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="danger-outline">Vider</button></form></div><section class="panel no-pad"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Dépôt</th><th>Type</th><th>Acteur</th><th>Statut</th><th>Détail</th></tr></thead><tbody>{% for r in logs %}<tr><td class="mono muted">{{ r.created_at }}</td><td><strong>{{ r.repository }}</strong></td><td>{{ r.event_type }}</td><td>{{ r.actor or "—" }}</td><td><span class="badge {{ r.result }}">{{ "Envoyé" if r.result=="sent" else ("Ignoré" if r.result=="ignored" else "Erreur") }}</span></td><td class="muted">{{ r.title or r.reason or "—" }}</td></tr>{% else %}<tr><td colspan="6"><div class="empty"><b>Aucun événement</b></div></td></tr>{% endfor %}</tbody></table></div></section>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Historique</span>
+    <h1>Journaux</h1>
+    <p>500 derniers événements traités.</p>
+  </div>
+  <form method="post" action="{{ url_for('main.logs_clear') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <button class="danger-outline">Vider</button>
+  </form>
+</div>
+
+<section class="panel no-pad">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Dépôt</th>
+          <th>Type</th>
+          <th>Acteur</th>
+          <th>Statut</th>
+          <th>Détail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in logs %}
+        <tr>
+          <td class="mono muted">{{ r.created_at }}</td>
+          <td><strong>{{ r.repository }}</strong></td>
+          <td>{{ r.event_type }}</td>
+          <td>{{ r.actor or "—" }}</td>
+          <td>
+            <span class="badge {{ r.result }}">
+              {{ "Envoyé" if r.result=="sent" else ("Ignoré" if r.result=="ignored" else "Erreur") }}
+            </span>
+          </td>
+          <td class="muted">
+            {% if r.result == "failed" %}
+              {{ r.reason or r.title or "Erreur inconnue" }}
+            {% else %}
+              {{ r.title or r.reason or "—" }}
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6">
+            <div class="empty"><b>Aucun événement</b></div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
