@@ -55,23 +55,16 @@ L'application doit utiliser un reverse proxy HTTPS type Nginx Proxy Manager, Tra
 ## Captures d'écran
 
 <p align="center">
-  <img src="docs/screens/1.png" width="49%" alt="GitHub Discord Notifier - capture 1">
-  <img src="docs/screens/2.png" width="49%" alt="GitHub Discord Notifier - capture 2">
+  <a href="docs/screens/1.png"><img src="docs/screens/1.png" width="48%" alt="GitHub Discord Notifier - capture 1"></a>
+  <a href="docs/screens/2.png"><img src="docs/screens/2.png" width="48%" alt="GitHub Discord Notifier - capture 2"></a>
+  <a href="docs/screens/3.png"><img src="docs/screens/3.png" width="48%" alt="GitHub Discord Notifier - capture 3"></a>
+  <a href="docs/screens/4.png"><img src="docs/screens/4.png" width="22%" alt="GitHub Discord Notifier - capture 4"></a>
+  <a href="docs/screens/5.png"><img src="docs/screens/5.png" width="48%" alt="GitHub Discord Notifier - capture 5"></a>
+  <a href="docs/screens/6.png"><img src="docs/screens/6.png" width="48%" alt="GitHub Discord Notifier - capture 6"></a>
+  <a href="docs/screens/7.png"><img src="docs/screens/7.png" width="48%" alt="GitHub Discord Notifier - capture 7"></a>
 </p>
 
-<p align="center">
-  <img src="docs/screens/3.png" width="49%" alt="GitHub Discord Notifier - capture 3">
-  <img src="docs/screens/4.png" width="49%" alt="GitHub Discord Notifier - capture 4">
-</p>
-
-<p align="center">
-  <img src="docs/screens/5.png" width="49%" alt="GitHub Discord Notifier - capture 5">
-  <img src="docs/screens/6.png" width="49%" alt="GitHub Discord Notifier - capture 6">
-</p>
-
-<p align="center">
-  <img src="docs/screens/7.png" width="70%" alt="GitHub Discord Notifier - capture 7">
-</p>
+> Cliquez sur une capture pour l'afficher en taille réelle.
 
 ## Prérequis
 
