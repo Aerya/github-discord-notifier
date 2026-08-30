@@ -24,7 +24,7 @@ GitHub Discord Notifier :8080
 
 GitHub pousse directement chaque événement vers l'application dès qu'il se produit.
 
-L'application est doit utiliser un reverse proxy HTTPS type Nginx Proxy Manager, Traefik, Caddy, Cloudflare Tunnel...
+L'application doit utiliser un reverse proxy HTTPS type Nginx Proxy Manager, Traefik, Caddy, Cloudflare Tunnel...
 
 ## Fonctionnalités
 
@@ -145,7 +145,6 @@ Les journaux indiquent notamment :
 - vérification HMAC SHA-256 des livraisons GitHub
 - protection CSRF de la WebUI
 - cookies `HttpOnly` et `SameSite=Lax`
-- `Secure` recommandé derrière HTTPS
 - CSP et anti-framing
 - aucun secret écrit dans les journaux
 
