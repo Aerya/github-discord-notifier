@@ -76,27 +76,6 @@ Le PAT sert uniquement à :
 
 Il n'est pas utilisé pour scanner périodiquement les dépôts.
 
-## Configuration GitHub
-
-Dans la page **GitHub** de la WebUI :
-
-1. connectez le Fine-grained PAT ;
-2. saisissez l'URL publique de votre sous-domaine, par exemple :
-
-```text
-https://github-notifier.exemple.fr
-```
-
-L'application construit automatiquement l'endpoint :
-
-```text
-https://github-notifier.exemple.fr/webhook/github
-```
-
-Elle génère également automatiquement un secret webhook et le stocke chiffré dans SQLite.
-
-Ensuite, lorsque vous sélectionnez des dépôts ou modifiez les types d'alertes, les webhooks GitHub sont resynchronisés automatiquement.
-
 ## Sécurité des webhooks GitHub
 
 Chaque livraison GitHub est vérifiée grâce à la signature :
