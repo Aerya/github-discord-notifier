@@ -99,9 +99,12 @@
   </form>
 </section>
 
-<section class="panel">
-  <div class="panel-head"><div><h2>3. Exceptions Dependabot par dépôt</h2><p>Ce réglage ne modifie ni les autres alertes ni les destinations Discord du dépôt.</p></div></div>
-  <div class="stack">
+<details class="panel advanced-panel">
+  <summary>
+    <div><h2>3. Exceptions Dependabot par dépôt</h2><small>Ouvrir pour gérer les exceptions sans modifier les autres alertes ni les destinations Discord.</small></div>
+    <span aria-hidden="true">⌄</span>
+  </summary>
+  <div class="advanced-content">
     {% for repo in repositories if repo.selected %}
     <form method="post" action="{{ url_for('main.repository_dependabot', repository_id=repo.id) }}" class="option-line">
       <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
@@ -113,5 +116,5 @@
     <div class="empty compact"><b>Aucun dépôt surveillé</b><span>Sélectionnez d’abord les dépôts à surveiller.</span></div>
     {% endfor %}
   </div>
-</section>
+</details>
 {% endblock %}
