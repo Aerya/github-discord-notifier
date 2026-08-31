@@ -67,6 +67,7 @@
     <div class="global-options">
       <span class="section-label">Pull Requests</span>
       <label class="option-line"><input type="checkbox" name="ignore_own_prs" checked><div><strong>Ignorer mes propres PR</strong><small>Ne pas envoyer d’alerte lorsqu’une Pull Request vient de votre compte GitHub.</small></div></label>
+      <label class="option-line"><input type="checkbox" name="ignore_dependabot_prs"><div><strong>Ignorer les PR Dependabot</strong><small>Ne pas envoyer d’alerte lorsqu’une Pull Request est créée par Dependabot.</small></div></label>
     </div>
 
     <div class="global-options">
@@ -96,5 +97,21 @@
       <button class="primary" type="submit">Appliquer la configuration</button>
     </div>
   </form>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><div><h2>3. Exceptions Dependabot par dépôt</h2><p>Ce réglage ne modifie ni les autres alertes ni les destinations Discord du dépôt.</p></div></div>
+  <div class="stack">
+    {% for repo in repositories if repo.selected %}
+    <form method="post" action="{{ url_for('main.repository_dependabot', repository_id=repo.id) }}" class="option-line">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <div><strong>{{ repo.full_name }}</strong><small>{{ "Les PR Dependabot sont ignorées." if repo.ignore_dependabot_prs else "Les PR Dependabot sont notifiées." }}</small></div>
+      <label><input type="checkbox" name="ignore_dependabot_prs" {% if repo.ignore_dependabot_prs %}checked{% endif %}> Ignorer Dependabot</label>
+      <button class="secondary" type="submit">Enregistrer</button>
+    </form>
+    {% else %}
+    <div class="empty compact"><b>Aucun dépôt surveillé</b><span>Sélectionnez d’abord les dépôts à surveiller.</span></div>
+    {% endfor %}
+  </div>
 </section>
 {% endblock %}

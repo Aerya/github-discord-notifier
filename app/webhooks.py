@@ -239,6 +239,18 @@ def process_github_delivery(app, db, event, payload, delivery_id):
             return True
         pr = payload.get("pull_request") or {}
         login = (setting_get("github_login", "") or "").lower()
+        pr_author = (pr.get("user") or {}).get("login") or sender
+        is_dependabot = pr_author.lower() == "dependabot[bot]"
+        if repo["ignore_dependabot_prs"] and is_dependabot:
+            return _finish_ignored(
+                db,
+                repo,
+                delivery_key,
+                "prs",
+                pr.get("title"),
+                pr_author,
+                "PR créée par Dependabot",
+            )
         if repo["ignore_own_prs"] and sender.lower() == login:
             return _finish_ignored(
                 db,
