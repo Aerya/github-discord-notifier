@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS repositories (
     forks_enabled INTEGER NOT NULL DEFAULT 0,
     stars_enabled INTEGER NOT NULL DEFAULT 0,
     ignore_own_prs INTEGER NOT NULL DEFAULT 1,
+    ignore_dependabot_prs INTEGER NOT NULL DEFAULT 0,
     action_success INTEGER NOT NULL DEFAULT 0,
     action_failure INTEGER NOT NULL DEFAULT 1,
     action_cancelled INTEGER NOT NULL DEFAULT 0,
@@ -78,6 +79,7 @@ CREATE TABLE IF NOT EXISTS event_logs (
 
 
 MIGRATIONS = {
+    "ignore_dependabot_prs": "INTEGER NOT NULL DEFAULT 0",
     "github_hook_id": "INTEGER",
     "github_hook_status": "TEXT",
     "github_hook_error": "TEXT",

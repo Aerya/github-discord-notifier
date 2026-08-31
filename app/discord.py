@@ -1,4 +1,5 @@
 import requests
+from urllib.parse import quote
 
 ICON_BASE = "https://raw.githubusercontent.com/Aerya/github-discord-notifier/main/app/static/octicons"
 
@@ -15,12 +16,17 @@ def _repo_link(repo):
     return f"[{repo}](https://github.com/{repo})"
 
 
+def _actor_link(actor):
+    if not actor:
+        return "inconnu"
+    return f"[{actor}](https://github.com/{quote(actor, safe='-')})"
+
+
 def _base(title, url, description, repo, actor, icon):
-    return {
+    embed = {
         "title": title,
         "url": url,
         "description": (description or "")[:3500],
-        "thumbnail": {"url": ICONS[icon]},
         "fields": [
             {
                 "name": "Dépôt",
@@ -29,12 +35,19 @@ def _base(title, url, description, repo, actor, icon):
             },
             {
                 "name": "Auteur",
-                "value": actor or "inconnu",
+                "value": _actor_link(actor),
                 "inline": True,
             },
         ],
         "footer": {"text": "GitHub Discord Notifier"},
     }
+    if actor:
+        embed["author"] = {
+            "name": actor,
+            "url": f"https://github.com/{quote(actor, safe='-')}",
+            "icon_url": ICONS[icon],
+        }
+    return embed
 
 
 def issue_embed(repo, issue):
@@ -167,7 +180,10 @@ def test(webhook_url):
             "embeds": [{
                 "title": "GitHub Discord Notifier",
                 "description": "Le webhook Discord fonctionne correctement.",
-                "thumbnail": {"url": ICONS["workflow"]},
+                "author": {
+                    "name": "GitHub Discord Notifier",
+                    "icon_url": ICONS["action"],
+                },
                 "footer": {"text": "Message de test"},
             }],
             "allowed_mentions": {"parse": []},

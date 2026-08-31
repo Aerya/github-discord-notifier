@@ -484,6 +484,27 @@ def repositories_selection():
     return redirect(url_for("main.repositories"))
 
 
+@bp.post("/depots/<int:repository_id>/dependabot")
+@login_required
+def repository_dependabot(repository_id):
+    require_csrf()
+    db = get_db()
+    repo = db.execute(
+        "SELECT id,full_name FROM repositories WHERE id=?", (repository_id,)
+    ).fetchone()
+    if not repo:
+        abort(404)
+    enabled = int("ignore_dependabot_prs" in request.form)
+    db.execute(
+        "UPDATE repositories SET ignore_dependabot_prs=? WHERE id=?",
+        (enabled, repository_id),
+    )
+    db.commit()
+    state = "ignorées" if enabled else "à nouveau notifiées"
+    flash(f"Les PR Dependabot de {repo['full_name']} seront {state}.", "success")
+    return redirect(url_for("main.repositories"))
+
+
 @bp.post("/depots/appliquer-global")
 @login_required
 def repositories_apply_global():
@@ -503,6 +524,7 @@ def repositories_apply_global():
         int("forks_enabled" in request.form),
         int("stars_enabled" in request.form),
         int("ignore_own_prs" in request.form),
+        int("ignore_dependabot_prs" in request.form),
         int("action_success" in request.form),
         int("action_failure" in request.form),
         int("action_cancelled" in request.form),
@@ -520,6 +542,7 @@ def repositories_apply_global():
             UPDATE repositories SET
                 issues_enabled=?,prs_enabled=?,actions_enabled=?,
                 forks_enabled=?,stars_enabled=?,ignore_own_prs=?,
+                ignore_dependabot_prs=?,
                 action_success=?,action_failure=?,action_cancelled=?
             WHERE id=?
             """,
