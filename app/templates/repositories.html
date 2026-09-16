@@ -56,26 +56,26 @@
     <div>
       <span class="section-label">Notifications</span>
       <div class="global-event-grid">
-        <label class="global-event"><input type="checkbox" name="issues_enabled" checked><img class="octicon" src="{{ url_for('static', filename='octicons/issue-opened.svg') }}" alt=""><div><strong>Issues</strong><small>Nouvelles issues</small></div></label>
-        <label class="global-event"><input type="checkbox" name="prs_enabled" checked><img class="octicon" src="{{ url_for('static', filename='octicons/git-pull-request.svg') }}" alt=""><div><strong>Pull Requests</strong><small>Nouvelles PR</small></div></label>
-        <label class="global-event"><input type="checkbox" name="actions_enabled"><img class="octicon" src="{{ url_for('static', filename='octicons/workflow.svg') }}" alt=""><div><strong>Actions</strong><small>Workflows terminés</small></div></label>
-        <label class="global-event"><input type="checkbox" name="forks_enabled"><img class="octicon" src="{{ url_for('static', filename='octicons/repo-forked.svg') }}" alt=""><div><strong>Forks</strong><small>Nouveaux forks</small></div></label>
-        <label class="global-event"><input type="checkbox" name="stars_enabled"><img class="octicon" src="{{ url_for('static', filename='octicons/star.svg') }}" alt=""><div><strong>Stars</strong><small>Nouvelles étoiles</small></div></label>
+        <label class="global-event"><input type="checkbox" name="issues_enabled" {% if global_config is none or global_config.issues_enabled %}checked{% endif %}><img class="octicon" src="{{ url_for('static', filename='octicons/issue-opened.svg') }}" alt=""><div><strong>Issues</strong><small>Nouvelles issues</small></div></label>
+        <label class="global-event"><input type="checkbox" name="prs_enabled" {% if global_config is none or global_config.prs_enabled %}checked{% endif %}><img class="octicon" src="{{ url_for('static', filename='octicons/git-pull-request.svg') }}" alt=""><div><strong>Pull Requests</strong><small>Nouvelles PR</small></div></label>
+        <label class="global-event"><input type="checkbox" name="actions_enabled" {% if global_config and global_config.actions_enabled %}checked{% endif %}><img class="octicon" src="{{ url_for('static', filename='octicons/workflow.svg') }}" alt=""><div><strong>Actions</strong><small>Workflows terminés</small></div></label>
+        <label class="global-event"><input type="checkbox" name="forks_enabled" {% if global_config and global_config.forks_enabled %}checked{% endif %}><img class="octicon" src="{{ url_for('static', filename='octicons/repo-forked.svg') }}" alt=""><div><strong>Forks</strong><small>Nouveaux forks</small></div></label>
+        <label class="global-event"><input type="checkbox" name="stars_enabled" {% if global_config and global_config.stars_enabled %}checked{% endif %}><img class="octicon" src="{{ url_for('static', filename='octicons/star.svg') }}" alt=""><div><strong>Stars</strong><small>Nouvelles étoiles</small></div></label>
       </div>
     </div>
 
     <div class="global-options">
       <span class="section-label">Pull Requests</span>
-      <label class="option-line"><input type="checkbox" name="ignore_own_prs" checked><div><strong>Ignorer mes propres PR</strong><small>Ne pas envoyer d’alerte lorsqu’une Pull Request vient de votre compte GitHub.</small></div></label>
-      <label class="option-line"><input type="checkbox" name="ignore_dependabot_prs"><div><strong>Ignorer les PR Dependabot</strong><small>Ne pas envoyer d’alerte lorsqu’une Pull Request est créée par Dependabot.</small></div></label>
+      <label class="option-line"><input type="checkbox" name="ignore_own_prs" {% if global_config is none or global_config.ignore_own_prs %}checked{% endif %}><div><strong>Ignorer mes propres PR</strong><small>Ne pas envoyer d’alerte lorsqu’une Pull Request vient de votre compte GitHub.</small></div></label>
+      <label class="option-line"><input type="checkbox" name="ignore_dependabot_prs" {% if global_config and global_config.ignore_dependabot_prs %}checked{% endif %}><div><strong>Ignorer les PR Dependabot</strong><small>Ne pas envoyer d’alerte lorsqu’une Pull Request est créée par Dependabot.</small></div></label>
     </div>
 
     <div class="global-options">
       <span class="section-label">GitHub Actions</span>
       <div class="action-result-grid">
-        <label><input type="checkbox" name="action_failure" checked> Échec</label>
-        <label><input type="checkbox" name="action_success"> Succès</label>
-        <label><input type="checkbox" name="action_cancelled"> Annulé</label>
+        <label><input type="checkbox" name="action_failure" {% if global_config is none or global_config.action_failure %}checked{% endif %}> Échec</label>
+        <label><input type="checkbox" name="action_success" {% if global_config and global_config.action_success %}checked{% endif %}> Succès</label>
+        <label><input type="checkbox" name="action_cancelled" {% if global_config and global_config.action_cancelled %}checked{% endif %}> Annulé</label>
       </div>
     </div>
 
@@ -84,7 +84,7 @@
       {% if webhooks %}
       <div class="webhook-choice-grid">
         {% for w in webhooks %}
-        <label class="webhook-choice"><input type="checkbox" name="webhook_id" value="{{ w.id }}"><strong>{{ w.name }}</strong></label>
+        <label class="webhook-choice"><input type="checkbox" name="webhook_id" value="{{ w.id }}" {% if w.id in global_webhook_ids %}checked{% endif %}><strong>{{ w.name }}</strong></label>
         {% endfor %}
       </div>
       {% else %}

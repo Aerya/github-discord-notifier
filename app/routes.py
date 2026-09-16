@@ -435,11 +435,17 @@ def repositories():
     link_map = {}
     for x in links:
         link_map.setdefault(x["repository_id"], set()).add(x["webhook_id"])
+    global_config = next((repo for repo in rows if repo["selected"]), None)
+    global_webhook_ids = (
+        link_map.get(global_config["id"], set()) if global_config else set()
+    )
     return render_template(
         "repositories.html",
         repositories=rows,
         webhooks=hooks,
         link_map=link_map,
+        global_config=global_config,
+        global_webhook_ids=global_webhook_ids,
         webhook_ready=bool(_webhook_endpoint()),
     )
 
