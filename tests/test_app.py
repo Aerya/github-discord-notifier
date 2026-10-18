@@ -1,6 +1,33 @@
 from cryptography.fernet import Fernet
 from app import create_app
 from app.db import get_db
+from html.parser import HTMLParser
+
+
+def test_repositories_loads_deferred_search_script(tmp_path):
+    app = make_app(tmp_path)
+    client = app.test_client()
+    with app.app_context():
+        db = get_db()
+        db.execute("INSERT INTO users(username,password_hash) VALUES('admin','hash')")
+        db.commit()
+    with client.session_transaction() as session:
+        session["user_id"] = 1
+
+    scripts = []
+
+    class ScriptParser(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            if tag == "script":
+                scripts.append(dict(attrs))
+
+    response = client.get("/depots")
+    assert response.status_code == 200
+    ScriptParser().feed(response.get_data(as_text=True))
+    matching = [script for script in scripts if script.get("src") == "/static/repos.js"]
+    assert len(matching) == 1
+    assert "defer" in matching[0]
+    assert client.get(matching[0]["src"]).status_code == 200
 
 def make_app(tmp_path):
     return create_app({'TESTING':True,'SECRET_KEY':'test','DATABASE':str(tmp_path/'test.db'),'ENCRYPTION_KEY':Fernet.generate_key().decode()})
