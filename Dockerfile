@@ -1,4 +1,8 @@
 FROM python:3.13-alpine
+
+# eMudhra: refresh both the CA sources and the generated bundle.
+RUN apk add --no-cache --upgrade ca-certificates ca-certificates-bundle \
+    && update-ca-certificates
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 RUN addgroup -S app && adduser -S -G app app
 WORKDIR /app

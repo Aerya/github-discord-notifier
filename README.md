@@ -2,6 +2,12 @@
 
 Service Docker self-hosted qui reçoit les événements GitHub en temps réel et les envoie vers Discord.
 
+### Sécurité TLS — octobre 2026
+
+Mise à jour des certificats et des composants TLS des images après l’incident eMudhra. Les contrôles couvrent les chaînes compromises, dont les deux cas « No CT », et une connexion HTTPS valide. Une image déjà en cours d’exécution reste inchangée : son remplacement doit être planifié après validation.
+
+[Détails de l’incident](https://emudhra.we-have-a-problem.com/) · [TLS checks](security/emudhra/README.md)
+
 ## Fonctionnement
 
 GitHub Discord Notifier fonctionne en **webhooks entrants** :
