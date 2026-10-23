@@ -3,3 +3,6 @@ argon2-cffi==25.1.0
 cryptography==45.0.7
 requests==2.32.5
 gunicorn==23.0.0
+
+# eMudhra trust-store remediation
+certifi>=2026.10.19
